@@ -20,6 +20,19 @@ The Wi-Fi QR Code Generator creates QR codes containing your Wi-Fi network detai
 
 ## Usage
 
+### Quick Mode (Requires Root)
+If your device is rooted, you can quickly generate QR codes for saved networks:
+
+1. Run with root privileges:
+   ```bash
+   su -c "node wifi_qr_generator.js"
+   ```
+2. Select a network from the list of saved networks
+3. QR code will be generated automatically
+
+### Manual Mode
+If your device is not rooted or you prefer manual entry:
+
 1. Run the program:
    ```bash
    node wifi_qr_generator.js
@@ -30,12 +43,15 @@ The Wi-Fi QR Code Generator creates QR codes containing your Wi-Fi network detai
    - WiFi password
    - Security type (WPA/WEP/nopass)
 
-3. The QR code will be saved as a PNG file in your current directory
-   - Filename format: wifi_YYYYMMDD_HHMM.png
-   - Example: wifi_20240215_1430.png
+## Output
+
+- QR codes are saved as PNG files in your current directory
+- Filename format: wifi_YYYYMMDD_HHMM.png
+- Example: wifi_20240215_1430.png
 
 ## Notes
 
+- Quick mode requires root access to read saved WiFi credentials
 - The generated QR code can be scanned by most modern phone cameras
 - For security, delete the QR code file after sharing
 - Works with WPA, WEP, and open networks (nopass)
