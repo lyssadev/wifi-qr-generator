@@ -1,35 +1,41 @@
 # Wi-Fi QR Code Generator
 
-This tool generates a QR code for sharing your Wi-Fi credentials securely. It is designed to run in Termux on Android devices using Node.js.
+A simple command-line tool that generates QR codes for sharing Wi-Fi credentials securely. Designed to run in Termux on Android devices using Node.js.
 
 ## Description
 
-The Wi-Fi QR Code Generator allows users to create a QR code that contains their Wi-Fi SSID, password, and encryption type. Scanning the QR code will allow devices to connect to the specified Wi-Fi network without manually entering the credentials.
+The Wi-Fi QR Code Generator creates QR codes containing your Wi-Fi network details. When someone scans the generated QR code with their phone's camera, they can connect to your Wi-Fi network automatically without typing the password.
 
 ## Installation
 
-1. Ensure you have Node.js installed in your Termux environment.
-2. Install the required package by running:
+1. Make sure Node.js is installed in Termux:
+   ```bash
+   pkg install nodejs
+   ```
+
+2. Install the required QR code package:
    ```bash
    npm install qrcode
    ```
 
 ## Usage
 
-To run the script, execute the following command in your Termux terminal:
-```bash
-node wifi_qr_generator.js
-```
-You will be prompted to enter your Wi-Fi SSID, password, and encryption type. The QR code will be generated and saved as `wifi_qr.png`.
+1. Run the program:
+   ```bash
+   node wifi_qr_generator.js
+   ```
 
-## License
+2. Follow the prompts to enter:
+   - WiFi name (SSID)
+   - WiFi password
+   - Security type (WPA/WEP/nopass)
 
-MIT License
+3. The QR code will be saved as a PNG file in your current directory
+   - Filename format: wifi_YYYYMMDD_HHMM.png
+   - Example: wifi_20240215_1430.png
 
-Copyright (c) 2024 Lisa
+## Notes
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-1. The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-2. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- The generated QR code can be scanned by most modern phone cameras
+- For security, delete the QR code file after sharing
+- Works with WPA, WEP, and open networks (nopass)
