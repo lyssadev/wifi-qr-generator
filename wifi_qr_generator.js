@@ -1,23 +1,72 @@
-const QRCode = require('qrcode');
+var QRCode = require('qrcode');
+var readline = require('readline');
 
-function generateWifiQR(ssid, password, encryption = 'WPA') {
-    const wifiConfig = `WIFI:S:${ssid};T:${encryption};P:${password};;`;
-    QRCode.toFile('wifi_qr.png', wifiConfig, function (err) {
-        if (err) throw err;
-        console.log("QR code generated and saved as 'wifi_qr.png'.");
-    });
+function validateInput(input, type) {
+    if (!input || input.trim() === '') {
+        throw new Error(type + ' cannot be empty');
+    }
+    if (type === 'encryption' && !['WPA', 'WEP', 'nopass'].includes(input.toUpperCase())) {
+        throw new Error('Invalid encryption type. Use WPA, WEP, or nopass');
+    }
+    return input.trim();
 }
 
-const readline = require('readline').createInterface({
+function getTimestamp() {
+    var date = new Date();
+    return date.getFullYear() + '' + 
+           (date.getMonth() + 1) + '' + 
+           date.getDate() + '_' + 
+           date.getHours() + '' + 
+           date.getMinutes();
+}
+
+function generateWifiQR(ssid, password, encryption) {
+    try {
+        ssid = validateInput(ssid, 'SSID');
+        password = validateInput(password, 'Password');
+        encryption = validateInput(encryption || 'WPA', 'Encryption');
+        
+        var filename = 'wifi_' + getTimestamp() + '.png';
+        var wifiString = 'WIFI:S:' + ssid + ';T:' + encryption.toUpperCase() + ';P:' + password + ';;';
+
+        QRCode.toFile(filename, wifiString, function(err) {
+            if (err) {
+                console.error('Error generating QR code:', err.message);
+                return;
+            }
+            console.log('QR code saved as: ' + filename);
+            console.log('You can find the file in your current directory');
+        });
+    } catch (err) {
+        console.error('Error:', err.message);
+    }
+}
+
+var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-readline.question('Enter Wi-Fi SSID: ', (ssid) => {
-    readline.question('Enter Wi-Fi Password: ', (password) => {
-        readline.question('Enter Encryption Type (WPA/WEP/nopass): ', (encryption) => {
-            generateWifiQR(ssid, password, encryption);
-            readline.close();
-        });
+function askSSID() {
+    rl.question('WiFi name (SSID): ', function(ssid) {
+        askPassword(ssid);
     });
-});
+}
+
+function askPassword(ssid) {
+    rl.question('WiFi password: ', function(password) {
+        askEncryption(ssid, password);
+    });
+}
+
+function askEncryption(ssid, password) {
+    rl.question('Security type (WPA/WEP/nopass) [WPA]: ', function(encryption) {
+        encryption = encryption || 'WPA';
+        generateWifiQR(ssid, password, encryption);
+        rl.close();
+    });
+}
+
+console.log('WiFi QR Code Generator');
+console.log('----------------------');
+askSSID();
