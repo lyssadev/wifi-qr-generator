@@ -1,57 +1,52 @@
 # Wi-Fi QR Code Generator
 
-A simple command-line tool that generates QR codes for sharing Wi-Fi credentials securely. Designed to run in Termux on Android devices using Node.js.
+A simple command-line tool that generates QR codes for sharing Wi-Fi credentials securely. Now compatible with both Android (using Termux) and Linux.
 
 ## Description
 
-The Wi-Fi QR Code Generator creates QR codes containing your Wi-Fi network details. When someone scans the generated QR code with their phone's camera, they can connect to your Wi-Fi network automatically without typing the password.
+The Wi-Fi QR Code Generator is a command-line tool designed to generate QR codes for sharing Wi-Fi credentials. It supports both manual entry and automatic detection of saved networks. The tool is now compatible with Linux, providing advanced network search and root access for certain operations.
+
+## Features
+
+- **Manual Entry:** Manually enter the SSID, password, and encryption type to generate a QR code.
+- **Saved Networks:** Automatically detect and list saved Wi-Fi networks (requires root access on Linux).
+- **Advanced Network Search:** List available Wi-Fi networks and select one to generate a QR code.
+- **Linux Compatibility:** The tool now works on both Android (using Termux) and Linux.
 
 ## Installation
 
-1. Make sure Node.js is installed in Termux:
-   ```bash
-   pkg install nodejs
-   ```
-
-2. Install the required QR code package:
-   ```bash
+1. **Node.js:** Ensure Node.js is installed on your system.
+2. **Dependencies:** Install the required dependencies by running:
+   ```sh
    npm install qrcode
    ```
 
-## Usage
+### Running the Tool
 
-### Quick Mode (Requires Root)
-If your device is rooted, you can quickly generate QR codes for saved networks:
-
-1. Run with root privileges:
-   ```bash
-   su -c "node wifi_qr_generator.js"
-   ```
-2. Select a network from the list of saved networks
-3. QR code will be generated automatically
-
-### Manual Mode
-If your device is not rooted or you prefer manual entry:
-
-1. Run the program:
-   ```bash
+1. **List Available Networks:**
+   ```sh
    node wifi_qr_generator.js
    ```
+   The tool will list available Wi-Fi networks and prompt you to select one. If no networks are found, it will proceed to manual entry.
 
-2. Follow the prompts to enter:
-   - WiFi name (SSID)
-   - WiFi password
-   - Security type (WPA/WEP/nopass)
+2. **Manual Entry:**
+   If you choose manual entry, the tool will prompt you to enter the SSID, password, and encryption type.
 
-## Output
+### Example
 
-- QR codes are saved as PNG files in your current directory
-- Filename format: wifi_YYYYMMDD_HHMM.png
-- Example: wifi_20240215_1430.png
+```sh
+node wifi_qr_generator.js
+```
 
-## Notes
+### Notes
 
-- Quick mode requires root access to read saved WiFi credentials
-- The generated QR code can be scanned by most modern phone cameras
-- For security, delete the QR code file after sharing
-- Works with WPA, WEP, and open networks (nopass)
+- **Root Access:** Some operations, such as reading saved Wi-Fi configurations, may require root access. Use `sudo` when running the tool if necessary.
+- **Network Interface:** The tool uses `wlan0` as the default network interface for listing available networks. If your system uses a different interface, you may need to modify the script.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request if you have any improvements or bug fixes.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
