@@ -111,7 +111,7 @@ function parseNetworks(configContent) {
 }
 
 function tryReadWifiConfig(callback) {
-    var command = 'su -c "cat /data/misc/wifi/wpa_supplicant.conf"';
+    var command = 'sudo cat /etc/wpa_supplicant/wpa_supplicant.conf';
     
     exec(command, function(error, stdout, stderr) {
         if (error) {
@@ -121,6 +121,24 @@ function tryReadWifiConfig(callback) {
         
         try {
             var networks = parseNetworks(stdout);
+            callback(networks);
+        } catch (err) {
+            callback(null);
+        }
+    });
+}
+
+function listAvailableNetworks(callback) {
+    var command = 'sudo iwlist wlan0 scan | grep ESSID';
+    
+    exec(command, function(error, stdout, stderr) {
+        if (error) {
+            callback(null);
+            return;
+        }
+        
+        try {
+            var networks = stdout.split('\n').map(line => line.trim().replace('ESSID:', '').replace(/"/g, ''));
             callback(networks);
         } catch (err) {
             callback(null);
@@ -183,13 +201,45 @@ function startManualEntry() {
 // Main program
 console.log('\nWiFi QR Code Generator');
 console.log('====================\n');
-console.log('Checking for saved networks...\n');
 
-tryReadWifiConfig(function(networks) {
-    if (networks && networks.length > 0) {
-        showNetworkSelection(networks);
-    } else {
-        console.log('No saved networks found or no root access.\n');
-        startManualEntry();
-    }
-});
+function listAndSelectNetworks() {
+    listAvailableNetworks(function(networks) {
+        if (networks && networks.length > 0) {
+            console.log('\nAvailable networks:');
+            console.log('-------------------');
+            for (var i = 0; i < networks.length; i++) {
+                console.log((i + 1) + ') ' + networks[i]);
+            }
+            console.log('0) Manual entry');
+            console.log('-------------------\n');
+
+            var rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+
+            rl.question('Select network number: ', function(choice) {
+                var num = parseInt(choice);
+                if (num === 0) {
+                    rl.close();
+                    startManualEntry();
+                } else if (num > 0 && num <= networks.length) {
+                    var selected = networks[num - 1];
+                    rl.question('WiFi password: ', function(password) {
+                        generateWifiQR(selected, password, 'WPA');
+                        rl.close();
+                    });
+                } else {
+                    console.log('\nInvalid selection. Starting manual entry...\n');
+                    rl.close();
+                    startManualEntry();
+                }
+            });
+        } else {
+            console.log('No available networks found. Starting manual entry...\n');
+            startManualEntry();
+        }
+    });
+}
+
+listAndSelectNetworks();
