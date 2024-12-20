@@ -3,19 +3,45 @@ var readline = require('readline');
 var fs = require('fs');
 var exec = require('child_process').exec;
 
+const colors = {
+    reset: "\x1b[0m",
+    bright: "\x1b[1m",
+    dim: "\x1b[2m",
+    underscore: "\x1b[4m",
+    blink: "\x1b[5m",
+    reverse: "\x1b[7m",
+    hidden: "\x1b[8m",
+    fg: {
+        black: "\x1b[30m",
+        red: "\x1b[31m",
+        green: "\x1b[32m",
+        yellow: "\x1b[33m",
+        blue: "\x1b[34m",
+        magenta: "\x1b[35m",
+        cyan: "\x1b[36m",
+        white: "\x1b[37m",
+        crimson: "\x1b[38m" // Scarlet
+    },
+    bg: {
+        black: "\x1b[40m",
+        red: "\x1b[41m",
+        green: "\x1b[42m",
+        yellow: "\x1b[43m",
+        blue: "\x1b[44m",
+        magenta: "\x1b[45m",
+        cyan: "\x1b[46m",
+        white: "\x1b[47m",
+        crimson: "\x1b[48m"
+    }
+};
+
 function validateInput(input, type) {
     if (!input || input.trim() === '') {
         return new Error(type + ' cannot be empty');
     }
     if (type === 'encryption') {
         var validTypes = ['WPA', 'WEP', 'nopass'];
-        var found = false;
-        for (var i = 0; i < validTypes.length; i++) {
-            if (validTypes[i] === input.toUpperCase()) {
-                found = true;
-                break;
-            }
-        }
+        var found = validTypes.includes(input.toUpperCase());
         if (!found) {
             return new Error('Invalid encryption type. Use WPA, WEP, or nopass');
         }
@@ -44,20 +70,20 @@ function generateWifiQR(ssid, password, encryption) {
     
     validationError = validateInput(ssid, 'SSID');
     if (validationError) {
-        console.error('Error:', validationError.message);
+        console.error(colors.fg.red + 'Error:', validationError.message + colors.reset);
         return;
     }
     
     validationError = validateInput(password, 'Password');
     if (validationError) {
-        console.error('Error:', validationError.message);
+        console.error(colors.fg.red + 'Error:', validationError.message + colors.reset);
         return;
     }
     
     encryption = encryption || 'WPA';
     validationError = validateInput(encryption, 'Encryption');
     if (validationError) {
-        console.error('Error:', validationError.message);
+        console.error(colors.fg.red + 'Error:', validationError.message + colors.reset);
         return;
     }
 
@@ -66,13 +92,11 @@ function generateWifiQR(ssid, password, encryption) {
 
     QRCode.toFile(filename, wifiString, function(err) {
         if (err) {
-            console.error('Error generating QR code:', err.message);
+            console.error(colors.fg.red + 'Error generating QR code:', err.message + colors.reset);
             return;
         }
-        console.log('');
-        console.log('Success! QR code saved as: ' + filename);
-        console.log('File location: ' + process.cwd() + '/' + filename);
-        console.log('');
+        console.log(colors.fg.green + '\nSuccess! QR code saved as: ' + filename + colors.reset);
+        console.log(colors.fg.cyan + 'File location: ' + process.cwd() + '/' + filename + colors.reset);
     });
 }
 
@@ -146,22 +170,63 @@ function listAvailableNetworks(callback) {
     });
 }
 
+// New function to list networks using non-root methods
+function listNetworks(callback) {
+    var commands = [
+        'nmcli -t -f active,ssid dev wifi',
+        'iw dev wlan0 scan | grep SSID',
+        'iwconfig wlan0 | grep ESSID',
+        'iw wlan0 link',
+        'iw dev wlan0 station dump',
+        'iwlist wlan0 scan | grep ESSID',
+        'iwlist wlan0 scan | grep Quality',
+        'iwlist wlan0 scan | grep Frequency',
+        'iwlist wlan0 scan | grep Channel',
+        'iwlist wlan0 scan | grep Mode',
+        'iwlist wlan0 scan | grep Cell',
+        'iwlist wlan0 scan | grep Address',
+        'iwlist wlan0 scan | grep Signal',
+        'iwlist wlan0 scan | grep Noise',
+        'iwlist wlan0 scan | grep Encryption',
+        'iwlist wlan0 scan | grep Bit Rates',
+        'iwlist wlan0 scan | grep WPA',
+        'iwlist wlan0 scan | grep WEP',
+        'iwlist wlan0 scan | grep IEEE'
+    ];
+
+    var results = [];
+    var completed = 0;
+
+    commands.forEach(command => {
+        exec(command, function(error, stdout, stderr) {
+            if (!error) {
+                var networks = stdout.split('\n').map(line => line.trim().replace(/"/g, ''));
+                results.push(...networks);
+            }
+            completed++;
+            if (completed === commands.length) {
+                callback(results);
+            }
+        });
+    });
+}
+
 function showNetworkSelection(networks) {
-    console.log('\nSaved networks found:');
-    console.log('-------------------');
+    console.log(colors.fg.cyan + '\nSaved networks found:');
+    console.log('-------------------' + colors.reset);
     
     for (var i = 0; i < networks.length; i++) {
-        console.log((i + 1) + ') ' + networks[i].ssid);
+        console.log(colors.fg.yellow + (i + 1) + ') ' + networks[i].ssid + colors.reset);
     }
-    console.log('0) Manual entry');
-    console.log('-------------------\n');
+    console.log(colors.fg.yellow + '0) Manual entry' + colors.reset);
+    console.log(colors.fg.cyan + '-------------------\n' + colors.reset);
     
     var rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
-    rl.question('Select network number: ', function(choice) {
+    rl.question(colors.fg.green + 'Select network number: ' + colors.reset, function(choice) {
         var num = parseInt(choice);
         if (num === 0) {
             rl.close();
@@ -171,7 +236,7 @@ function showNetworkSelection(networks) {
             generateWifiQR(selected.ssid, selected.password, selected.encryption);
             rl.close();
         } else {
-            console.log('\nInvalid selection. Starting manual entry...\n');
+            console.log(colors.fg.red + '\nInvalid selection. Starting manual entry...\n' + colors.reset);
             rl.close();
             startManualEntry();
         }
@@ -184,12 +249,12 @@ function startManualEntry() {
         output: process.stdout
     });
 
-    console.log('\nManual WiFi QR Code Generation');
-    console.log('----------------------------\n');
+    console.log(colors.fg.magenta + '\nManual WiFi QR Code Generation');
+    console.log('----------------------------\n' + colors.reset);
 
-    rl.question('WiFi name (SSID): ', function(ssid) {
-        rl.question('WiFi password: ', function(password) {
-            rl.question('Security type (WPA/WEP/nopass) [WPA]: ', function(encryption) {
+    rl.question(colors.fg.green + 'WiFi name (SSID): ' + colors.reset, function(ssid) {
+        rl.question(colors.fg.green + 'WiFi password: ' + colors.reset, function(password) {
+            rl.question(colors.fg.green + 'Security type (WPA/WEP/nopass) [WPA]: ' + colors.reset, function(encryption) {
                 encryption = encryption || 'WPA';
                 generateWifiQR(ssid, password, encryption);
                 rl.close();
@@ -199,44 +264,44 @@ function startManualEntry() {
 }
 
 // Main program
-console.log('\nWiFi QR Code Generator');
-console.log('====================\n');
+console.log(colors.fg.magenta + '\nWiFi QR Code Generator');
+console.log('====================\n' + colors.reset);
 
 function listAndSelectNetworks() {
-    listAvailableNetworks(function(networks) {
+    listNetworks(function(networks) {
         if (networks && networks.length > 0) {
-            console.log('\nAvailable networks:');
-            console.log('-------------------');
+            console.log(colors.fg.cyan + '\nAvailable networks:');
+            console.log('-------------------' + colors.reset);
             for (var i = 0; i < networks.length; i++) {
-                console.log((i + 1) + ') ' + networks[i]);
+                console.log(colors.fg.yellow + (i + 1) + ') ' + networks[i] + colors.reset);
             }
-            console.log('0) Manual entry');
-            console.log('-------------------\n');
+            console.log(colors.fg.yellow + '0) Manual entry' + colors.reset);
+            console.log(colors.fg.cyan + '-------------------\n' + colors.reset);
 
             var rl = readline.createInterface({
                 input: process.stdin,
                 output: process.stdout
             });
 
-            rl.question('Select network number: ', function(choice) {
+            rl.question(colors.fg.green + 'Select network number: ' + colors.reset, function(choice) {
                 var num = parseInt(choice);
                 if (num === 0) {
                     rl.close();
                     startManualEntry();
                 } else if (num > 0 && num <= networks.length) {
                     var selected = networks[num - 1];
-                    rl.question('WiFi password: ', function(password) {
+                    rl.question(colors.fg.green + 'WiFi password: ' + colors.reset, function(password) {
                         generateWifiQR(selected, password, 'WPA');
                         rl.close();
                     });
                 } else {
-                    console.log('\nInvalid selection. Starting manual entry...\n');
+                    console.log(colors.fg.red + '\nInvalid selection. Starting manual entry...\n' + colors.reset);
                     rl.close();
                     startManualEntry();
                 }
             });
         } else {
-            console.log('No available networks found. Starting manual entry...\n');
+            console.log(colors.fg.red + 'No available networks found. Starting manual entry...\n' + colors.reset);
             startManualEntry();
         }
     });
